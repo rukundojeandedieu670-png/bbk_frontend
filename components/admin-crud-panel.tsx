@@ -32,7 +32,15 @@ export function AdminCrudPanel({ permissions }: { permissions: string[] }) {
     else setMessage(result.error ?? "Unable to load records.");
   }
 
-  useEffect(() => { void load(); }, [type]);
+  useEffect(() => {
+    let active = true;
+    getAdminContent(type).then((result) => {
+      if (!active) return;
+      if (result.data) setRecords(result.data.data);
+      else setMessage(result.error ?? "Unable to load records.");
+    });
+    return () => { active = false; };
+  }, [type]);
 
   function startEdit(record: Record<string, unknown>): void {
     setEditing(Number(record.id));
