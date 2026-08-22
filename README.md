@@ -10,7 +10,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 Next.js frontend for the BBK Laravel API. Set `NEXT_PUBLIC_API_BASE_URL` in `.env.local` to the Laravel API origin. The local default is `http://localhost:8000`.
 
-Public content is read from `/api/v1`; forms post to `/api/v1/interactions/*`. For Vercel, set `NEXT_PUBLIC_API_BASE_URL` to the Render API origin and allow-list the Vercel origin through backend `CORS_ALLOWED_ORIGINS`.
+Public content is read from `/api/v1`; forms post to `/api/v1/interactions/*`. For Vercel, set `NEXT_PUBLIC_API_BASE_URL=https://bbk-backend-ryg2.onrender.com`. The Render service must set `CORS_ALLOWED_ORIGINS=https://bbk-flame.vercel.app`.
 
 ## Getting Started
 
