@@ -3,8 +3,9 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { getHubs, getPartners, getPrograms, getStories, subscribeNewsletter } from "@/lib/api";
-import type { Hub, Partner, Program, Story } from "@/types";
+import { getHubs, getPartners, getPrograms, getSiteSettings, getStories, subscribeNewsletter } from "@/lib/api";
+import { SiteFooter } from "@/components/site-footer";
+import type { Hub, Partner, Program, SiteSettings, Story } from "@/types";
 
 const pillars = [
   { index: "01", title: "Sport", text: "Football and athletics become shared ground for confidence, discipline and belonging." },
@@ -22,14 +23,16 @@ export default function Home() {
   const [contentLoading, setContentLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [newsletterState, setNewsletterState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
-    Promise.all([getHubs(), getPrograms(), getStories(), getPartners()]).then(([hubResult, programResult, storyResult, partnerResult]) => {
+    Promise.all([getHubs(), getPrograms(), getStories(), getPartners(), getSiteSettings()]).then(([hubResult, programResult, storyResult, partnerResult, settingsResult]) => {
       if (hubResult.data) setHubs(hubResult.data);
       if (programResult.data) setPrograms(programResult.data);
       if (storyResult.data) setStories(storyResult.data);
       if (partnerResult.data) setPartners(partnerResult.data);
-      setContentError([hubResult, programResult, storyResult, partnerResult].find((result) => result.error)?.error ?? null);
+      if (settingsResult.data) setSettings(settingsResult.data);
+      setContentError([hubResult, programResult, storyResult, partnerResult, settingsResult].find((result) => result.error)?.error ?? null);
       setContentLoading(false);
     });
   }, []);
@@ -51,7 +54,7 @@ export default function Home() {
           </a>
           <button className="menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? "Close" : "Menu"}</button>
           <nav className={menuOpen ? "main-nav is-open" : "main-nav"} aria-label="Main navigation">
-            <a href="#approach" onClick={() => setMenuOpen(false)}>Our approach</a><a href="#hubs" onClick={() => setMenuOpen(false)}>Hubs</a><a href="#programs" onClick={() => setMenuOpen(false)}>Programs</a><a href="#stories" onClick={() => setMenuOpen(false)}>Stories</a><a href="#get-involved" className="nav-cta" onClick={() => setMenuOpen(false)}>Get involved <span aria-hidden="true">↗</span></a>
+            <a href="#approach" onClick={() => setMenuOpen(false)}>Our approach</a><a href="#hubs" onClick={() => setMenuOpen(false)}>Hubs</a><a href="#programs" onClick={() => setMenuOpen(false)}>Programs</a><a href="#stories" onClick={() => setMenuOpen(false)}>Stories</a><Link href="/news" onClick={() => setMenuOpen(false)}>News</Link><a href="#get-involved" className="nav-cta" onClick={() => setMenuOpen(false)}>Get involved <span aria-hidden="true">↗</span></a>
           </nav>
         </div>
       </header>
@@ -76,7 +79,7 @@ export default function Home() {
 
       <section id="get-involved" className="section newsletter-section"><div className="container-wide newsletter-layout"><div><p className="eyebrow eyebrow-gold">Stay connected</p><h2>There is room<br /><em>for your energy.</em></h2></div><form onSubmit={handleNewsletter} className="newsletter-form"><label htmlFor="email">Get occasional news from BBK</label><div className="input-row"><input id="email" value={email} onChange={(event) => { setEmail(event.target.value); setNewsletterState("idle"); }} placeholder="Your email address" type="email" /><button type="submit" disabled={newsletterState === "loading"}>{newsletterState === "loading" ? "Joining…" : "Join us ↗"}</button></div>{newsletterState === "error" && <p className="form-message error">Please enter a valid email or try again in a moment.</p>}{newsletterState === "success" && <p className="form-message success">You are on the list. Welcome to the movement.</p>}</form></div></section>
 
-      <footer className="site-footer"><div className="container-wide footer-grid"><a href="#top" className="brand-lockup footer-brand"><Image className="brand-logo" src="/bbk-logo.png" alt="Bridging Borders Kigali" width={58} height={58} /><span className="brand-name">Bridging<br />Borders Kigali</span></a><p>Sport, culture and entertainment<br />for peace-building in Rwanda.</p><div><a href="mailto:hello@bbkigali.org">hello@bbkigali.org</a><br /><span>Kigali · Huye · Rwanda</span></div></div></footer>
+      <SiteFooter settings={settings} />
     </main>
   );
 }

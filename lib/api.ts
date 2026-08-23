@@ -1,12 +1,18 @@
 export interface Paginated<T> { data: T[]; current_page: number; last_page: number; total: number; }
-import type { ContactMessage, Event, Hub, NewsPost, NewsletterSubscriber, Partner, PartnershipInquiry, Program, StaffUser, Story, VolunteerApplication } from "@/types";
+import type { ContactMessage, Event, Hub, NewsPost, NewsletterSubscriber, Partner, PartnershipInquiry, Program, SiteSettings, StaffUser, Story, VolunteerApplication } from "@/types";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+export function resolveMediaUrl(url?: string | null, mediaId?: number): string | null {
+  if (!url) return null;
+  return url.startsWith("/") && baseUrl && mediaId ? `${baseUrl}/api/v1/media/${mediaId}` : url;
+}
 export async function fetchApi<T>(path: string, options?: RequestInit): Promise<{ data: T | null; error: string | null; status?: number }> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 4000);
   try {
-    const response = await fetch(`${baseUrl}${path}`, { ...options, signal: controller.signal, headers: { "Content-Type": "application/json", ...options?.headers }, next: { revalidate: 60 } });
+    const headers = new Headers(options?.headers);
+    if (!(options?.body instanceof FormData)) headers.set("Content-Type", "application/json");
+    const response = await fetch(`${baseUrl}${path}`, { ...options, signal: controller.signal, headers, next: { revalidate: 60 } });
     const payload = await response.json();
     if (!response.ok) return { data: null, error: payload?.message ?? `Request failed (${response.status})`, status: response.status };
     return { data: payload?.data ?? payload, error: null, status: response.status };
@@ -21,6 +27,7 @@ export const getStories = () => get<Story>("stories");
 export const getEvents = () => get<Event>("events");
 export const getPartners = () => get<Partner>("partners");
 export const getNewsPosts = () => get<NewsPost>("news");
+export const getSiteSettings = () => fetchApi<SiteSettings>("/api/v1/site-settings");
 export const getHub = (slug: string) => getOne<Hub>("hubs", slug);
 export const getProgram = (slug: string) => getOne<Program>("programs", slug);
 export const getStory = (slug: string) => getOne<Story>("stories", slug);
@@ -61,6 +68,17 @@ function adminRequest<T>(path: string, options: RequestInit = {}) {
   return fetchApi<T>(path, { ...options, headers: { Authorization: `Bearer ${token ?? ""}`, ...options.headers } });
 }
 export function getAdminContent(type: string) { return adminRequest<{ data: Record<string, unknown>[] }>(`/api/v1/admin/content/${type}`); }
-export function createAdminContent(type: string, payload: Record<string, unknown>) { return adminRequest<{ data: Record<string, unknown>; message: string }>(`/api/v1/admin/content/${type}`, { method: "POST", body: JSON.stringify(payload) }); }
-export function updateAdminContent(type: string, id: number, payload: Record<string, unknown>) { return adminRequest<{ data: Record<string, unknown>; message: string }>(`/api/v1/admin/content/${type}/${id}`, { method: "PATCH", body: JSON.stringify(payload) }); }
+export function createAdminContent(type: string, payload: Record<string, unknown>) { return adminRequest<Record<string, unknown>>(`/api/v1/admin/content/${type}`, { method: "POST", body: JSON.stringify(payload) }); }
+export function updateAdminContent(type: string, id: number, payload: Record<string, unknown>) { return adminRequest<Record<string, unknown>>(`/api/v1/admin/content/${type}/${id}`, { method: "PATCH", body: JSON.stringify(payload) }); }
 export function deleteAdminContent(type: string, id: number) { return adminRequest<{ message: string }>(`/api/v1/admin/content/${type}/${id}`, { method: "DELETE" }); }
+export async function uploadAdminMedia(type: string, id: number, file: File, altText: string) {
+  const token = getAdminToken();
+  const formData = new FormData();
+  formData.append("file", file);
+  if (altText.trim()) formData.append("altText", altText.trim());
+  return fetchApi<{ id: number; type: string; url?: string | null; altText?: string | null }>(`/api/v1/admin/media/${type}/${id}`, {
+    method: "POST",
+    body: formData,
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+}

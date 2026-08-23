@@ -9,4 +9,18 @@ export interface NewsletterSubscriber { email: string; }
 export interface VolunteerApplication { name: string; email: string; phone?: string; hubOfInterest?: string; message?: string; }
 export interface PartnershipInquiry { organizationName: string; contactName: string; email: string; message: string; }
 export interface ContactMessage { name: string; email: string; subject: string; message: string; }
+export interface SiteSettings {
+	site_name?: string | null;
+	background_color?: string | null;
+	accent_color?: string | null;
+	secondary_accent_color?: string | null;
+	font_pairing?: string | null;
+	social_facebook_url?: string | null;
+	social_twitter_url?: string | null;
+	social_whatsapp_number?: string | null;
+	social_instagram_url?: string | null;
+	social_youtube_url?: string | null;
+	social_linkedin_url?: string | null;
+	social_tiktok_url?: string | null;
+}
 export interface StaffUser { id: number; name: string; email: string; roles: string[]; permissions: string[]; }
