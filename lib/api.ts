@@ -1,5 +1,5 @@
 export interface Paginated<T> { data: T[]; current_page: number; last_page: number; total: number; }
-import type { AuditLogEntry, ContactMessage, Event, Hub, NewsPost, NewsletterSubscriber, Partner, PartnershipInquiry, Program, SiteSettings, StaffUser, Story, VolunteerApplication } from "@/types";
+import type { AuditLogEntry, ContactMessage, Event, HomepageHero, Hub, NewsPost, NewsletterSubscriber, Partner, PartnershipInquiry, Program, SiteSettings, StaffUser, Story, VolunteerApplication } from "@/types";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 export function resolveMediaUrl(url?: string | null, mediaId?: number): string | null {
@@ -28,6 +28,7 @@ export const getEvents = () => get<Event>("events");
 export const getPartners = () => get<Partner>("partners");
 export const getNewsPosts = () => get<NewsPost>("news");
 export const getSiteSettings = () => fetchApi<SiteSettings>("/api/v1/site-settings");
+export const getHomepageHero = () => fetchApi<HomepageHero[]>("/api/v1/homepage-hero");
 export function updateAdminSiteSettings(settings: Partial<SiteSettings>) {
   return adminRequest<SiteSettings>("/api/v1/admin/site-settings", { method: "PUT", body: JSON.stringify(settings) });
 }
@@ -95,3 +96,8 @@ export async function uploadAdminMedia(type: string, id: number, file: File, alt
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 }
+export function getAdminHero() { return adminRequest<Record<string, unknown>[]>("/api/v1/admin/content/hero"); }
+export function createAdminHero(payload: Record<string, unknown>) { return adminRequest<Record<string, unknown>>("/api/v1/admin/content/hero", { method: "POST", body: JSON.stringify(payload) }); }
+export function updateAdminHero(id: number, payload: Record<string, unknown>) { return adminRequest<Record<string, unknown>>(`/api/v1/admin/content/hero/${id}`, { method: "PATCH", body: JSON.stringify(payload) }); }
+export function deleteAdminHero(id: number) { return adminRequest<{ message: string }>(`/api/v1/admin/content/hero/${id}`, { method: "DELETE" }); }
+export function reorderAdminHero(ids: number[]) { return adminRequest<{ message: string }>("/api/v1/admin/content/hero/reorder", { method: "POST", body: JSON.stringify({ ids }) }); }

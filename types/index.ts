@@ -5,6 +5,7 @@ export interface Story { id: number; title: string; slug: string; authorName: st
 export interface Event { id: number; title: string; slug: string; eventType: string; location: string; startsAt: string; endsAt?: string | null; description?: string | null; coverImage?: string | null; hub?: Hub | null; program?: Program | null; media?: MediaAsset[]; }
 export interface Partner { id: number; name: string; logo?: string | null; websiteUrl?: string | null; partnerType: string; description?: string | null; media?: MediaAsset[]; }
 export interface NewsPost { id: number; title: string; slug: string; body: string; coverImage?: string | null; publishedAt?: string | null; media?: MediaAsset[]; }
+export interface HomepageHero { id: number; eyebrow?: string | null; title: string; body?: string | null; ctaLabel?: string | null; ctaUrl?: string | null; imageUrl?: string | null; location?: string | null; side: "left" | "right"; sortOrder: number; isActive: boolean; }
 export interface NewsletterSubscriber { email: string; }
 export interface VolunteerApplication { name: string; email: string; phone?: string; hubOfInterest?: string; message?: string; }
 export interface PartnershipInquiry { organizationName: string; contactName: string; email: string; message: string; }

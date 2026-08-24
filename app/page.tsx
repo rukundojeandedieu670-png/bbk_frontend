@@ -3,9 +3,9 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { getHubs, getPartners, getPrograms, getSiteSettings, getStories, subscribeNewsletter } from "@/lib/api";
+import { getHomepageHero, getHubs, getPartners, getPrograms, getSiteSettings, getStories, subscribeNewsletter } from "@/lib/api";
 import { SiteFooter } from "@/components/site-footer";
-import type { Hub, Partner, Program, SiteSettings, Story } from "@/types";
+import type { HomepageHero, Hub, Partner, Program, SiteSettings, Story } from "@/types";
 
 const pillars = [
   { index: "01", title: "Sport", text: "Football and athletics become shared ground for confidence, discipline and belonging." },
@@ -24,18 +24,22 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [newsletterState, setNewsletterState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [heroItems, setHeroItems] = useState<HomepageHero[]>([]);
 
   useEffect(() => {
-    Promise.all([getHubs(), getPrograms(), getStories(), getPartners(), getSiteSettings()]).then(([hubResult, programResult, storyResult, partnerResult, settingsResult]) => {
+    Promise.all([getHubs(), getPrograms(), getStories(), getPartners(), getSiteSettings(), getHomepageHero()]).then(([hubResult, programResult, storyResult, partnerResult, settingsResult, heroResult]) => {
       if (hubResult.data) setHubs(hubResult.data);
       if (programResult.data) setPrograms(programResult.data);
       if (storyResult.data) setStories(storyResult.data);
       if (partnerResult.data) setPartners(partnerResult.data);
       if (settingsResult.data) setSettings(settingsResult.data);
-      setContentError([hubResult, programResult, storyResult, partnerResult, settingsResult].find((result) => result.error)?.error ?? null);
+      if (heroResult.data) setHeroItems(heroResult.data);
+      setContentError([hubResult, programResult, storyResult, partnerResult, settingsResult, heroResult].find((result) => result.error)?.error ?? null);
       setContentLoading(false);
     });
   }, []);
+
+  const hero = heroItems[0];
 
   async function handleNewsletter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -59,10 +63,10 @@ export default function Home() {
         </div>
       </header>
 
-      <section id="top" className={settings?.hero_background_image ? "hero grain has-background-image" : "hero grain"} style={settings?.hero_background_image ? { backgroundImage: `url(${settings.hero_background_image})` } : undefined}>
+      <section id="top" className={hero?.imageUrl || settings?.hero_background_image ? "hero grain has-background-image" : "hero grain"} style={(hero?.imageUrl || settings?.hero_background_image) ? { backgroundImage: `url(${hero?.imageUrl ?? settings?.hero_background_image})` } : undefined}>
         <div className="hero-bridge" aria-hidden="true" />
-        <div className="container-wide hero-content"><p className="eyebrow">A national movement rooted in Rwanda</p><h1>Different lives.<br /><em>One shared field.</em></h1><p className="hero-copy">Bridging Borders Kigali uses sport, culture and entertainment to rebuild trust between communities, migrants and refugees.</p><a className="text-link light-link" href="#approach">Discover the movement <span aria-hidden="true">↓</span></a></div>
-        <div className="hero-note" aria-hidden="true">Kiyovu / Huye<br /><span>Rwanda</span></div>
+        <div className="container-wide hero-content"><p className="eyebrow">{hero?.eyebrow ?? "A national movement rooted in Rwanda"}</p><h1>{hero ? hero.title : <>Different lives.<br /><em>One shared field.</em></>}</h1><p className="hero-copy">{hero?.body ?? "Bridging Borders Kigali uses sport, culture and entertainment to rebuild trust between communities, migrants and refugees."}</p><a className="text-link light-link" href={hero?.ctaUrl ?? "#approach"}>{hero?.ctaLabel ?? "Discover the movement"} <span aria-hidden="true">↓</span></a></div>
+        <div className="hero-note" aria-hidden="true">{hero?.location ?? "Kiyovu / Huye"}<br /><span>Rwanda</span></div>
       </section>
 
       {contentError && <div className="api-notice" role="status">Some BBK content is temporarily unavailable. Please refresh shortly.</div>}
