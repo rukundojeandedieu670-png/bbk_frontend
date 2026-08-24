@@ -59,7 +59,7 @@ export default function Home() {
         </div>
       </header>
 
-      <section id="top" className="hero grain">
+      <section id="top" className={settings?.hero_background_image ? "hero grain has-background-image" : "hero grain"} style={settings?.hero_background_image ? { backgroundImage: `url(${settings.hero_background_image})` } : undefined}>
         <div className="hero-bridge" aria-hidden="true" />
         <div className="container-wide hero-content"><p className="eyebrow">A national movement rooted in Rwanda</p><h1>Different lives.<br /><em>One shared field.</em></h1><p className="hero-copy">Bridging Borders Kigali uses sport, culture and entertainment to rebuild trust between communities, migrants and refugees.</p><a className="text-link light-link" href="#approach">Discover the movement <span aria-hidden="true">↓</span></a></div>
         <div className="hero-note" aria-hidden="true">Kiyovu / Huye<br /><span>Rwanda</span></div>

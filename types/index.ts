@@ -11,6 +11,7 @@ export interface PartnershipInquiry { organizationName: string; contactName: str
 export interface ContactMessage { name: string; email: string; subject: string; message: string; }
 export interface SiteSettings {
 	site_name?: string | null;
+	hero_background_image?: string | null;
 	theme_primary_color?: string | null;
 	theme_accent_color?: string | null;
 	theme_secondary_accent_color?: string | null;

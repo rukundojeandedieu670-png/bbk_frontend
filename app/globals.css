@@ -25,6 +25,12 @@ button, input { font: inherit; }
 .menu-toggle { display: none; border: 0; background: transparent; color: white; font-weight: 700; }
 .hero { position: relative; min-height: 720px; overflow: hidden; background: var(--navy-deep); color: var(--white); }
 .hero::before { position: absolute; inset: 0; background: radial-gradient(circle at 80% 18%, rgba(201,95,67,.62), transparent 28%), linear-gradient(118deg, transparent 45%, rgba(201,95,67,.8) 45.2%, rgba(201,95,67,.8) 70%, transparent 70.2%); content: ""; }
+.hero.has-background-image { background-position: center; background-size: cover; }
+.hero.has-background-image::before { background: linear-gradient(90deg, rgba(9,37,56,.92), rgba(9,37,56,.58) 58%, rgba(9,37,56,.3)), rgba(9,37,56,.18); }
+.hero-image-control { display: grid; gap: 8px; border-top: 1px solid rgba(255,250,243,.18); padding-top: 22px; color: var(--white); }
+.hero-image-control span, .hero-image-control small { display: block; }
+.hero-image-control small { margin-top: 5px; color: rgba(255,250,243,.55); font-size: 11px; }
+.hero-image-control input { border: 1px solid rgba(255,250,243,.25); background: rgba(255,250,243,.06); padding: 11px; color: var(--white); outline: 0; }
 .hero-bridge { position: absolute; right: 8%; bottom: -18%; width: 48%; height: 68%; border: 28px solid rgba(232,174,66,.28); border-bottom: 0; border-radius: 50% 50% 0 0; transform: rotate(-8deg); }
 .hero-content { position: relative; z-index: 1; display: flex; min-height: 720px; flex-direction: column; justify-content: flex-end; padding-bottom: 112px; }
 .eyebrow { color: var(--terracotta); font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
