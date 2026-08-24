@@ -6,9 +6,9 @@ export function resolveMediaUrl(url?: string | null, mediaId?: number): string |
   if (!url) return null;
   return url.startsWith("/") && baseUrl && mediaId ? `${baseUrl}/api/v1/media/${mediaId}` : url;
 }
-export async function fetchApi<T>(path: string, options?: RequestInit): Promise<{ data: T | null; error: string | null; status?: number }> {
+export async function fetchApi<T>(path: string, options?: RequestInit, timeoutMs = 10000): Promise<{ data: T | null; error: string | null; status?: number }> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 4000);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const headers = new Headers(options?.headers);
     if (!(options?.body instanceof FormData)) headers.set("Content-Type", "application/json");
@@ -94,7 +94,7 @@ export async function uploadAdminMedia(type: string, id: number, file: File, alt
     method: "POST",
     body: formData,
     headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
+  }, 60000);
 }
 export function getAdminHero() { return adminRequest<Record<string, unknown>[]>("/api/v1/admin/content/hero"); }
 export function createAdminHero(payload: Record<string, unknown>) { return adminRequest<Record<string, unknown>>("/api/v1/admin/content/hero", { method: "POST", body: JSON.stringify(payload) }); }
