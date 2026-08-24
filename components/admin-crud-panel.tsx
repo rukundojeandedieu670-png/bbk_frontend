@@ -53,7 +53,7 @@ export function AdminCrudPanel({ permissions }: { permissions: string[] }) {
       else setMessage(result.error ?? "Unable to load records.");
     });
     return () => { active = false; };
-  }, [type, permittedTypes]);
+  }, [type]);
 
   function startEdit(record: Record<string, unknown>): void {
     setEditing(Number(record.id));
