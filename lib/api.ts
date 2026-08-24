@@ -14,6 +14,7 @@ export async function fetchApi<T>(path: string, options?: RequestInit, timeoutMs
     if (!(options?.body instanceof FormData)) headers.set("Content-Type", "application/json");
     const response = await fetch(`${baseUrl}${path}`, { ...options, signal: controller.signal, headers, cache: options?.method ? "no-store" : undefined, next: options?.method ? undefined : { revalidate: 60 } });
     const payload = await response.json();
+    if (response.status === 401) clearAdminToken();
     if (!response.ok) return { data: null, error: payload?.message ?? `Request failed (${response.status})`, status: response.status };
     return { data: payload?.data ?? payload, error: null, status: response.status };
   } catch { return { data: null, error: "The service is currently unavailable." }; }
