@@ -65,6 +65,7 @@ export function AdminCrudPanel({ permissions }: { permissions: string[] }) {
   async function save(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     setMessage("Saving…");
+    const selectedMediaFile = event.currentTarget.querySelector<HTMLInputElement>('input[type="file"]')?.files?.[0] ?? mediaFile;
     const result = editing === null ? await createAdminContent(type, values) : await updateAdminContent(type, editing, values);
     if (result.error) setMessage(result.error);
     else if (!result.data) setMessage("The record could not be saved.");
@@ -74,9 +75,9 @@ export function AdminCrudPanel({ permissions }: { permissions: string[] }) {
         const workflow = await updateAdminContentStatus(type, editing, editingStatus);
         if (workflow.error) { setMessage(`Record saved, but status update failed: ${workflow.error}`); await load(); return; }
       }
-      if (mediaFile && canUploadMedia) {
+      if (selectedMediaFile && canUploadMedia) {
         setMessage("Uploading image…");
-        const upload = await uploadAdminMedia(type, Number(record.id), mediaFile, altText);
+        const upload = await uploadAdminMedia(type, Number(record.id), selectedMediaFile, altText);
         if (upload.error) { setMessage(`Record saved, but image upload failed: ${upload.error}`); await load(); return; }
       }
       setMessage(editing === null ? "Record created." : "Record updated.");
