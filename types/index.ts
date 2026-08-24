@@ -11,10 +11,13 @@ export interface PartnershipInquiry { organizationName: string; contactName: str
 export interface ContactMessage { name: string; email: string; subject: string; message: string; }
 export interface SiteSettings {
 	site_name?: string | null;
+	theme_primary_color?: string | null;
+	theme_accent_color?: string | null;
+	theme_secondary_accent_color?: string | null;
 	background_color?: string | null;
 	accent_color?: string | null;
 	secondary_accent_color?: string | null;
-	font_pairing?: string | null;
+	font_pairing?: "athletic" | "bold" | "classic" | null;
 	social_facebook_url?: string | null;
 	social_twitter_url?: string | null;
 	social_whatsapp_number?: string | null;
@@ -22,5 +25,15 @@ export interface SiteSettings {
 	social_youtube_url?: string | null;
 	social_linkedin_url?: string | null;
 	social_tiktok_url?: string | null;
+	impact_people_impacted?: string | null;
+	impact_youth_trained?: string | null;
+	impact_satisfaction_rate?: string | null;
 }
-export interface StaffUser { id: number; name: string; email: string; roles: string[]; permissions: string[]; }
+export type ThemeSettings = {
+	theme_primary_color: string;
+	theme_accent_color: string;
+	theme_secondary_accent_color: string;
+	font_pairing: "athletic" | "bold" | "classic";
+};
+export interface StaffUser { id: number; name: string; email: string; roles: string[]; permissions: string[]; created_at?: string; }
+export interface AuditLogEntry { id: number; action: string; subjectType: string; subjectId: number; changes?: Record<string, unknown> | null; createdAt: string | null; user?: Pick<StaffUser, "id" | "name" | "email"> | null; }

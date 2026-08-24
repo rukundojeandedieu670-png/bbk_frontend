@@ -1,5 +1,5 @@
 export interface Paginated<T> { data: T[]; current_page: number; last_page: number; total: number; }
-import type { ContactMessage, Event, Hub, NewsPost, NewsletterSubscriber, Partner, PartnershipInquiry, Program, SiteSettings, StaffUser, Story, VolunteerApplication } from "@/types";
+import type { AuditLogEntry, ContactMessage, Event, Hub, NewsPost, NewsletterSubscriber, Partner, PartnershipInquiry, Program, SiteSettings, StaffUser, Story, VolunteerApplication } from "@/types";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 export function resolveMediaUrl(url?: string | null, mediaId?: number): string | null {
@@ -28,6 +28,9 @@ export const getEvents = () => get<Event>("events");
 export const getPartners = () => get<Partner>("partners");
 export const getNewsPosts = () => get<NewsPost>("news");
 export const getSiteSettings = () => fetchApi<SiteSettings>("/api/v1/site-settings");
+export function updateAdminSiteSettings(settings: Partial<SiteSettings>) {
+  return adminRequest<SiteSettings>("/api/v1/admin/site-settings", { method: "PUT", body: JSON.stringify(settings) });
+}
 export const getHub = (slug: string) => getOne<Hub>("hubs", slug);
 export const getProgram = (slug: string) => getOne<Program>("programs", slug);
 export const getStory = (slug: string) => getOne<Story>("stories", slug);
@@ -56,6 +59,15 @@ export function getAdminProfile() {
   const token = getAdminToken();
   return fetchApi<StaffUser>("/api/v1/admin/auth/me", { headers: token ? { Authorization: `Bearer ${token}` } : {} });
 }
+export function getAdminUsers() { return adminRequest<StaffUser[]>("/api/v1/admin/users"); }
+export function createAdminUser(payload: { name: string; email: string; password: string; role: "admin" | "publisher" }) {
+  return adminRequest<StaffUser>("/api/v1/admin/users", { method: "POST", body: JSON.stringify(payload) });
+}
+export function updateAdminUser(id: number, payload: Partial<{ name: string; email: string; password: string; role: "admin" | "publisher" }>) {
+  return adminRequest<StaffUser>(`/api/v1/admin/users/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+}
+export function deleteAdminUser(id: number) { return adminRequest<{ message: string }>(`/api/v1/admin/users/${id}`, { method: "DELETE" }); }
+export function getAdminAuditLogs() { return adminRequest<AuditLogEntry[]>("/api/v1/admin/audit-log"); }
 export async function logoutAdmin() {
   const token = getAdminToken();
   const result = await fetchApi<{ message: string }>("/api/v1/admin/auth/logout", { method: "POST", headers: token ? { Authorization: `Bearer ${token}` } : {} });
@@ -70,6 +82,7 @@ function adminRequest<T>(path: string, options: RequestInit = {}) {
 export function getAdminContent(type: string) { return adminRequest<{ data: Record<string, unknown>[] }>(`/api/v1/admin/content/${type}`); }
 export function createAdminContent(type: string, payload: Record<string, unknown>) { return adminRequest<Record<string, unknown>>(`/api/v1/admin/content/${type}`, { method: "POST", body: JSON.stringify(payload) }); }
 export function updateAdminContent(type: string, id: number, payload: Record<string, unknown>) { return adminRequest<Record<string, unknown>>(`/api/v1/admin/content/${type}/${id}`, { method: "PATCH", body: JSON.stringify(payload) }); }
+export function updateAdminContentStatus(type: string, id: number, status: string) { return adminRequest<Record<string, unknown>>(`/api/v1/admin/content/${type}/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }); }
 export function deleteAdminContent(type: string, id: number) { return adminRequest<{ message: string }>(`/api/v1/admin/content/${type}/${id}`, { method: "DELETE" }); }
 export async function uploadAdminMedia(type: string, id: number, file: File, altText: string) {
   const token = getAdminToken();

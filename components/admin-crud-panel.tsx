@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { createAdminContent, deleteAdminContent, getAdminContent, updateAdminContent, uploadAdminMedia } from "@/lib/api";
+import { createAdminContent, deleteAdminContent, getAdminContent, updateAdminContent, updateAdminContentStatus, uploadAdminMedia } from "@/lib/api";
 
 const types = ["hubs", "programs", "stories", "events", "partners", "news"];
 const fieldMap: Record<string, string[]> = {
@@ -12,13 +12,19 @@ const fieldMap: Record<string, string[]> = {
   partners: ["name", "partnerType", "websiteUrl", "description"],
   news: ["title", "body"],
 };
+const workflowTypes = new Set(["programs", "stories", "events", "news"]);
+const statuses = ["draft", "pending_review", "published", "archived"];
 
 function permissionFor(type: string): string {
   return type === "hubs" ? "manage-hubs" : type === "partners" ? "manage-partners" : `manage-${type === "news" ? "news" : type}`;
 }
 
 export function AdminCrudPanel({ permissions }: { permissions: string[] }) {
-  const [type, setType] = useState("programs");
+  const permittedTypes = types.filter((value) => permissions.includes(permissionFor(value)));
+  const [type, setType] = useState(() => {
+    const requestedType = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("content");
+    return requestedType && permittedTypes.includes(requestedType) ? requestedType : permittedTypes[0] ?? "";
+  });
   const [records, setRecords] = useState<Record<string, unknown>[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<number | null>(null);
@@ -29,7 +35,7 @@ export function AdminCrudPanel({ permissions }: { permissions: string[] }) {
   const [altText, setAltText] = useState("");
   const canManage = permissions.includes(permissionFor(type));
   const canEdit = canManage || (permissions.includes("publish-content") && type !== "hubs" && type !== "partners");
-  const canUploadMedia = type === "news" && permissions.includes("manage-media");
+  const canUploadMedia = permissions.includes("manage-media");
 
   async function load(): Promise<void> {
     const result = await getAdminContent(type);
@@ -39,13 +45,14 @@ export function AdminCrudPanel({ permissions }: { permissions: string[] }) {
 
   useEffect(() => {
     let active = true;
+    if (!type) return () => { active = false; };
     getAdminContent(type).then((result) => {
       if (!active) return;
       if (result.data) setRecords(result.data.data);
       else setMessage(result.error ?? "Unable to load records.");
     });
     return () => { active = false; };
-  }, [type]);
+  }, [type, permittedTypes]);
 
   function startEdit(record: Record<string, unknown>): void {
     setEditing(Number(record.id));
@@ -57,14 +64,15 @@ export function AdminCrudPanel({ permissions }: { permissions: string[] }) {
   async function save(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     setMessage("Saving…");
-    const payload = editing !== null && editingStatus
-      ? { ...values, status: editingStatus, publishedAt: editingPublishedAt || undefined }
-      : values;
-    const result = editing === null ? await createAdminContent(type, values) : await updateAdminContent(type, editing, payload);
+    const result = editing === null ? await createAdminContent(type, values) : await updateAdminContent(type, editing, values);
     if (result.error) setMessage(result.error);
     else if (!result.data) setMessage("The record could not be saved.");
     else {
       const record = result.data;
+      if (editing !== null && editingStatus && workflowTypes.has(type)) {
+        const workflow = await updateAdminContentStatus(type, editing, editingStatus);
+        if (workflow.error) { setMessage(`Record saved, but status update failed: ${workflow.error}`); await load(); return; }
+      }
       if (mediaFile && canUploadMedia) {
         setMessage("Uploading image…");
         const upload = await uploadAdminMedia(type, Number(record.id), mediaFile, altText);
@@ -87,9 +95,9 @@ export function AdminCrudPanel({ permissions }: { permissions: string[] }) {
     await load();
   }
 
-  return <section className="crud-workspace">
-    <div className="crud-heading"><div><p className="eyebrow">Content desk</p><h2>Manage records</h2></div><select value={type} onChange={(event) => { setType(event.target.value); setEditing(null); setValues({}); }} aria-label="Content type">{types.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
-    {(canManage || (canEdit && editing !== null)) && <form className="crud-form" onSubmit={save}><h3>{editing === null ? "Create" : "Edit"} {type}</h3>{fieldMap[type].map((field) => <label key={field}>{field}<input required={!['description', 'summary', 'body'].includes(field)} value={values[field] ?? ""} onChange={(event) => setValues({ ...values, [field]: event.target.value })} /></label>)}{canUploadMedia && <><label>Image<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => setMediaFile(event.target.files?.[0] ?? null)} /></label><label>Image alt text<input value={altText} onChange={(event) => setAltText(event.target.value)} /></label></>}<div className="crud-form-actions"><button type="submit">{editing === null ? "Create record" : "Save changes"} ↗</button>{editing !== null && <button type="button" onClick={() => { setEditing(null); setValues({}); setEditingStatus(null); setEditingPublishedAt(""); setMediaFile(null); setAltText(""); }}>Cancel</button>}</div></form>}
+  return <section className="crud-workspace" id="content-desk">
+    <div className="crud-heading"><div><p className="eyebrow">Content desk</p><h2>Manage records</h2></div><select value={type} onChange={(event) => { setType(event.target.value); setEditing(null); setValues({}); setEditingStatus(null); setEditingPublishedAt(""); setMediaFile(null); setAltText(""); }} aria-label="Content type">{permittedTypes.map((value) => <option key={value} value={value}>{value}</option>)}</select></div>
+    {(canManage || (canEdit && editing !== null)) && <form className="crud-form" onSubmit={save}><h3>{editing === null ? "Create" : "Edit"} {type}</h3>{fieldMap[type].map((field) => <label key={field}>{field}<input required={!['description', 'summary', 'body'].includes(field)} value={values[field] ?? ""} onChange={(event) => setValues({ ...values, [field]: event.target.value })} /></label>)}{editing !== null && editingStatus && workflowTypes.has(type) && <label>Status<select value={editingStatus} onChange={(event) => setEditingStatus(event.target.value)}>{statuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label>}{canUploadMedia && <><label>Image<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => setMediaFile(event.target.files?.[0] ?? null)} /></label><label>Image alt text<input value={altText} onChange={(event) => setAltText(event.target.value)} /></label></>}<div className="crud-form-actions"><button type="submit">{editing === null ? "Create record" : "Save changes"} ↗</button>{editing !== null && <button type="button" onClick={() => { setEditing(null); setValues({}); setEditingStatus(null); setEditingPublishedAt(""); setMediaFile(null); setAltText(""); }}>Cancel</button>}</div></form>}
     <p className="crud-message">{message || `${records.length} records loaded.`}</p>
     <div className="crud-records">{records.map((record) => <article key={String(record.id)}><div><strong>{String(record.title ?? record.name ?? "Untitled")}</strong><span>{String(record.status ?? record.partner_type ?? record.category ?? "")}</span></div><div className="crud-actions">{canEdit && <button type="button" onClick={() => startEdit(record)}>Edit</button>}{canManage && <button type="button" onClick={() => void remove(Number(record.id))}>Delete</button>}</div></article>)}</div>
   </section>;

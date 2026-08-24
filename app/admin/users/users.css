@@ -1,0 +1,14 @@
+.users-heading { padding-bottom: 36px; }
+.users-layout { display: grid; grid-template-columns: minmax(280px, .7fr) minmax(420px, 1.3fr); gap: 34px; align-items: start; }
+.users-form { margin: 0; }
+.users-form select { border: 1px solid rgba(255,250,243,.28); border-radius: 3px; background: var(--navy-deep); padding: 14px; color: var(--white); outline: none; }
+.users-list { padding: 28px; background: rgba(255,250,243,.08); }
+.users-list-heading { display: flex; align-items: end; justify-content: space-between; border-bottom: 1px solid rgba(255,250,243,.18); padding-bottom: 16px; }
+.users-list-heading strong { color: var(--gold); font-size: 12px; }
+.user-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; border-bottom: 1px solid rgba(255,250,243,.14); padding: 18px 0; }
+.user-row > div:first-child { min-width: 0; }
+.user-row strong, .user-row span, .user-row small { display: block; }
+.user-row span { margin-top: 5px; color: rgba(255,250,243,.7); font-size: 13px; overflow-wrap: anywhere; }
+.user-row small { margin-top: 5px; color: var(--gold); font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+@media (max-width: 840px) { .users-layout { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .user-row { align-items: flex-start; flex-direction: column; } }

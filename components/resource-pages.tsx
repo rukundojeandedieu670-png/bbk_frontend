@@ -20,7 +20,8 @@ function ResourceCard({ kind, item }: { kind: ResourceKind; item: Resource }) {
   const description = "summary" in item ? item.summary : "description" in item ? item.description : "body" in item ? item.body : undefined;
   const slug = "slug" in item ? item.slug : String(item.id);
   const date = "startsAt" in item ? item.startsAt : "publishedAt" in item ? item.publishedAt : undefined;
-  return <Link href={`/${resourcePath[kind]}/${slug}`} className="group bg-white p-7 transition hover:-translate-y-1 hover:shadow-xl"><p className="eyebrow">{date ? new Date(date).toLocaleDateString("en-GB", { dateStyle: "medium" }) : labels[kind]}</p><h2 className="display mt-12 text-2xl font-bold group-hover:text-[var(--brand)]">{title}</h2>{description && <p className="mt-4 line-clamp-3 text-sm leading-6 text-[var(--muted)]">{description}</p>}<span className="mt-8 inline-block text-sm font-bold text-[var(--brand)]">View details ↗</span></Link>;
+  const image = "media" in item ? item.media?.find((asset) => asset.type === "image" && asset.url) : undefined;
+  return <Link href={`/${resourcePath[kind]}/${slug}`} className="group bg-white p-7 transition hover:-translate-y-1 hover:shadow-xl">{image?.url && <Image className="resource-card-image" src={resolveMediaUrl(image.url, image.id) ?? image.url} alt={image.altText ?? String(title)} width={800} height={500} unoptimized />}<p className="eyebrow mt-6">{date ? new Date(date).toLocaleDateString("en-GB", { dateStyle: "medium" }) : labels[kind]}</p><h2 className="display mt-12 text-2xl font-bold group-hover:text-[var(--brand)]">{title}</h2>{description && <p className="mt-4 line-clamp-3 text-sm leading-6 text-[var(--muted)]">{description}</p>}<span className="mt-8 inline-block text-sm font-bold text-[var(--brand)]">View details ↗</span></Link>;
 }
 
 export function ResourceDetail({ kind, item }: { kind: ResourceKind; item: Resource }) {
@@ -37,5 +38,5 @@ function CoverMediaHero({ title, url }: { title: string; url: string }) {
 
 function MediaGallery({ media }: { media: MediaAsset[] }) {
   if (!media.length) return null;
-  return <section className="media-gallery" aria-label="News media"><h2 className="display text-3xl font-bold">Images</h2><div className="media-grid">{media.map((asset) => { const url = resolveMediaUrl(asset.url, asset.id); return url ? asset.type === "video" ? <video className="media-item" controls preload="metadata" key={asset.id} src={url}>{asset.altText}</video> : <Image className="media-image" key={asset.id} src={url} alt={asset.altText ?? "BBK news image"} width={1200} height={800} unoptimized /> : null; })}</div></section>;
+  return <section className="media-gallery" aria-label="Resource media"><h2 className="display text-3xl font-bold">Images</h2><div className="media-grid">{media.map((asset) => { const url = resolveMediaUrl(asset.url, asset.id); return url ? asset.type === "video" ? <video className="media-item" controls preload="metadata" key={asset.id} src={url}>{asset.altText}</video> : <Image className="media-image" key={asset.id} src={url} alt={asset.altText ?? "BBK resource image"} width={1200} height={800} unoptimized /> : null; })}</div></section>;
 }
